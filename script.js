@@ -494,42 +494,42 @@ const CHECKLIST_ITEMS = [
 // --- BIGGEST RED FLAGS CATALOG ---
 const RED_FLAGS_CATALOG = [
   {
-    title: "🔴 Promoter Pledging Increasing",
+    title: "Promoter Pledging Increasing",
     desc: "Promoters pledging >15% of their shares to raise cash. Stock price drop forces margin calls, causing catastrophic panic selling.",
     action: "Rule: Avoid or exit immediately if promoter pledge rises quarter over quarter."
   },
   {
-    title: "🔴 Negative Operating Cash Flow with Rising Profits",
+    title: "Negative Operating Cash Flow with Rising Profits",
     desc: "Net profit is growing on paper, but Operating Cash Flow (OCF) is zero or negative. Profits are fake or trapped in uncollected bills.",
     action: "Rule: Compare OCF vs Net Profit over 3 years. OCF must track Profit."
   },
   {
-    title: "🔴 Sales Growing but Profit Falling",
+    title: "Sales Growing but Profit Falling",
     desc: "Revenue increases by 25% but net profit declines by 10%. Shows severe margin compression, inability to pass on costs, or predatory pricing.",
     action: "Rule: Check Operating Margin trend over 4 quarters."
   },
   {
-    title: "🔴 High Debt with Falling Profits & Interest Coverage < 2x",
+    title: "High Debt with Falling Profits & Interest Coverage < 2x",
     desc: "Company takes heavy debt for expansion, but profits shrink. Interest cost eats up all operational earnings.",
     action: "Rule: Reject companies with Debt/Equity > 1.0 and Interest Coverage < 2.0x."
   },
   {
-    title: "🔴 Frequent Equity Dilution",
+    title: "Frequent Equity Dilution",
     desc: "Number of outstanding shares keeps increasing every year to fund losses, diluting existing shareholders' value.",
     action: "Rule: Check 5-Year Share Capital trend. It should be flat or decreasing."
   },
   {
-    title: "🔴 Sudden Auditor Resignation Mid-Year",
+    title: "Sudden Auditor Resignation Mid-Year",
     desc: "Independent auditor resigns before signing financial results, citing 'lack of management disclosure' or accounting disagreements.",
     action: "Rule: Immediate dealbreaker. Sell or stay away."
   },
   {
-    title: "🔴 Falling Promoter Holding Quarter over Quarter",
+    title: "Falling Promoter Holding Quarter over Quarter",
     desc: "Founders dumping stake quietly over 4 consecutive quarters while talking bullishly in news interviews.",
     action: "Rule: Track Shareholding Pattern quarterly changes on Screener.in."
   },
   {
-    title: "🔴 Trade Receivables Growing Faster than Sales",
+    title: "Trade Receivables Growing Faster than Sales",
     desc: "Receivables jump 50% while revenue grows only 10%. Shows company is stuffing channels or offering dangerous credit terms.",
     action: "Rule: Check Days Sales Outstanding (DSO) and Cash Conversion Cycle."
   }
@@ -608,17 +608,82 @@ const QUICK_REFERENCE_TABLES = [
       { name: "Interest Coverage", exc: ">8.0x", good: "5.0x–8.0x", avg: "2.0x–5.0x", poor: "<2.0x" },
       { name: "Promoter Pledge", exc: "0.0%", good: "<5.0%", avg: "5%–15%", poor: ">15.0%" }
     ]
+  },
+  {
+    title: "Valuation Ratios Cheat Sheet",
+    headers: ["Metric", "🟢 Bargain", "🟢 Fair Value", "🟡 Premium", "🔴 Overvalued / Flag"],
+    rows: [
+      { name: "P/E Ratio", exc: "< Industry Avg", good: "= Industry Avg", avg: "1.5x Industry", poor: ">3x Industry" },
+      { name: "PEG Ratio", exc: "< 0.8", good: "0.8–1.0", avg: "1.0–1.5", poor: "> 1.5" },
+      { name: "Price to Book (P/B)", exc: "< 1.5", good: "1.5–3.0", avg: "3.0–5.0", poor: "> 5.0" }
+    ]
+  },
+  {
+    title: "Cash Flow & Quality Cheat Sheet",
+    headers: ["Metric", "🟢 Excellent", "🟢 Good", "🟡 Average", "🔴 Poor / Flag"],
+    rows: [
+      { name: "Operating Cash Flow", exc: "OCF > Net Profit", good: "OCF ≈ Net Profit", avg: "OCF < 50% Profit", poor: "Negative OCF" },
+      { name: "Free Cash Flow (FCF)", exc: "High & Growing", good: "Modest Positive", avg: "Flat / Reinvesting", poor: "Consistently Negative" }
+    ]
   }
 ];
+
+// --- UTILITIES ---
+function safeGetStorage(key, fallback) {
+  try {
+    const item = localStorage.getItem(key);
+    return item ? JSON.parse(item) : fallback;
+  } catch (e) {
+    return fallback;
+  }
+}
+
+function safeSetStorage(key, value) {
+  try {
+    localStorage.setItem(key, JSON.stringify(value));
+  } catch (e) {
+    // Local storage disabled or full
+  }
+}
+
+function debounce(func, wait = 150) {
+  let timeout;
+  return function (...args) {
+    clearTimeout(timeout);
+    timeout = setTimeout(() => func.apply(this, args), wait);
+  };
+}
+
+function initSearchIndex() {
+  METRICS_DATA.forEach(m => {
+    m._searchStr = `${m.name} ${m.acronym} ${m.memoryTrick} ${m.whatIsIt} ${m.whyItMatters}`.toLowerCase();
+  });
+  RED_FLAGS_CATALOG.forEach(rf => {
+    rf._searchStr = `${rf.title} ${rf.desc} ${rf.action}`.toLowerCase();
+  });
+  SECTOR_EXCEPTIONS.forEach(sec => {
+    sec._searchStr = `${sec.sector} ${sec.why} ${sec.ignore.join(' ')} ${sec.focus.join(' ')}`.toLowerCase();
+  });
+  CHECKLIST_ITEMS.forEach(chk => {
+    chk._searchStr = chk.label.toLowerCase();
+  });
+  QUICK_REFERENCE_TABLES.forEach(tbl => {
+    tbl._rowsSearch = tbl.rows.map(r => ({
+      row: r,
+      str: `${r.name} ${r.exc} ${r.good}`.toLowerCase()
+    }));
+  });
+}
 
 // --- APPLICATION STATE ---
 let currentCategory = 'all';
 let catalogSearchQuery = '';
-let bookmarkedMetricIds = JSON.parse(localStorage.getItem('briefstocks_bookmarks') || '[]');
-let checklistState = JSON.parse(localStorage.getItem('briefstocks_checklist') || '{}');
+let bookmarkedMetricIds = safeGetStorage('briefstocks_bookmarks', []);
+let checklistState = safeGetStorage('briefstocks_checklist', {});
 
 // --- INITIALIZATION ---
 document.addEventListener('DOMContentLoaded', () => {
+  initSearchIndex();
   renderChecklist();
   renderCategoryFilters();
   renderMetrics();
@@ -627,6 +692,7 @@ document.addEventListener('DOMContentLoaded', () => {
   renderQuickReferenceTables();
   setupEventListeners();
   setupSectionObserver();
+  setupLiveFormEvaluator();
   updateChecklistScore();
 });
 
@@ -636,36 +702,44 @@ function setupEventListeners() {
   const catalogSearchInput = document.getElementById('catalog-search-input');
   const globalResults = document.getElementById('global-search-results');
 
-  // Local Catalog Search Bar (Scope: Metrics Catalog only)
+  // Debounced Catalog Search Bar (Scope: Metrics Catalog only)
   if (catalogSearchInput) {
-    catalogSearchInput.addEventListener('input', (e) => {
-      catalogSearchQuery = e.target.value.toLowerCase().trim();
+    const debouncedCatalogSearch = debounce((val) => {
+      catalogSearchQuery = val.toLowerCase().trim();
       renderMetrics();
+    }, 150);
+    catalogSearchInput.addEventListener('input', (e) => {
+      debouncedCatalogSearch(e.target.value);
     });
   }
 
-  // Top Navbar Search Bar (Scope: Global Search across all page sections)
+  // Debounced Top Navbar Search Bar (Scope: Global Search across all page sections)
   if (searchInput) {
+    const debouncedGlobalSearch = debounce((val) => {
+      handleGlobalSearch(val);
+    }, 150);
+
     searchInput.addEventListener('input', (e) => {
-      handleGlobalSearch(e.target.value);
+      debouncedGlobalSearch(e.target.value);
     });
 
     searchInput.addEventListener('focus', (e) => {
       if (e.target.value.trim()) {
-        handleGlobalSearch(e.target.value);
+        debouncedGlobalSearch(e.target.value);
       }
     });
   }
 
   // Keyboard shortcut Ctrl+K / '/' ALWAYS activates the Top Global Search Bar
   document.addEventListener('keydown', (e) => {
+    const activeTag = document.activeElement ? document.activeElement.tagName.toUpperCase() : '';
     if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
       e.preventDefault();
       if (searchInput) {
         searchInput.focus();
         searchInput.select();
       }
-    } else if (e.key === '/' && document.activeElement !== searchInput && document.activeElement !== catalogSearchInput) {
+    } else if (e.key === '/' && activeTag !== 'INPUT' && activeTag !== 'TEXTAREA') {
       e.preventDefault();
       if (searchInput) searchInput.focus();
     } else if (e.key === 'Escape') {
@@ -681,6 +755,53 @@ function setupEventListeners() {
     }
   });
 
+  // Delegated event listeners for sequence flow & flowchart tree
+  const sequenceFlow = document.getElementById('sequence-flow');
+  if (sequenceFlow) {
+    sequenceFlow.addEventListener('click', (e) => {
+      const item = e.target.closest('[data-category]');
+      if (item) setCategoryAndScroll(item.dataset.category);
+    });
+    sequenceFlow.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        const item = e.target.closest('[data-category]');
+        if (item) {
+          e.preventDefault();
+          setCategoryAndScroll(item.dataset.category);
+        }
+      }
+    });
+  }
+
+  const flowchartTree = document.getElementById('flowchart-tree');
+  if (flowchartTree) {
+    flowchartTree.addEventListener('click', (e) => {
+      const node = e.target.closest('[data-metric]');
+      if (node) searchMetric(node.dataset.metric, node);
+    });
+    flowchartTree.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        const node = e.target.closest('[data-metric]');
+        if (node) {
+          e.preventDefault();
+          searchMetric(node.dataset.metric, node);
+        }
+      }
+    });
+  }
+
+  // Reset checklist button listener
+  const resetChecklistBtn = document.getElementById('reset-checklist-btn');
+  if (resetChecklistBtn) {
+    resetChecklistBtn.addEventListener('click', resetChecklist);
+  }
+
+  // Reset screener form button listener
+  const resetScreenerBtn = document.getElementById('reset-screener-btn');
+  if (resetScreenerBtn) {
+    resetScreenerBtn.addEventListener('click', resetScreenerForm);
+  }
+
   // Screener Evaluator Form
   const evaluatorForm = document.getElementById('screener-eval-form');
   if (evaluatorForm) {
@@ -689,6 +810,74 @@ function setupEventListeners() {
       runLiveScreenerEvaluation();
     });
   }
+}
+
+// --- SETUP LIVE FORM EVALUATOR ---
+function setupLiveFormEvaluator() {
+  const evaluatorForm = document.getElementById('screener-eval-form');
+  if (evaluatorForm) {
+    evaluatorForm.addEventListener('input', () => {
+      const inputs = evaluatorForm.querySelectorAll('input');
+      const anyFilled = Array.from(inputs).some(i => i.value.trim() !== '');
+      if (anyFilled) {
+        runLiveScreenerEvaluation();
+      } else {
+        const outputBox = document.getElementById('evaluation-output');
+        if (outputBox) outputBox.classList.remove('active');
+      }
+    });
+  }
+}
+
+function resetScreenerForm() {
+  const evaluatorForm = document.getElementById('screener-eval-form');
+  if (evaluatorForm) evaluatorForm.reset();
+  const outputBox = document.getElementById('evaluation-output');
+  if (outputBox) {
+    outputBox.classList.remove('active');
+    outputBox.innerHTML = '';
+  }
+}
+
+function escapeHtml(str) {
+  if (!str) return '';
+  return String(str).replace(/[&<>"']/g, function(m) {
+    return {
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#039;'
+    }[m];
+  });
+}
+
+function getSectionTitle(sec) {
+  if (!sec) return '';
+  const navLink = document.querySelector(`.section-nav-link[href="#${sec.id}"]`);
+  if (navLink) {
+    return navLink.textContent.trim();
+  }
+  const heading = sec.querySelector('.section-heading, h1, h2, h3');
+  if (heading) {
+    return heading.textContent.replace(/\s+/g, ' ').trim();
+  }
+  return sec.id.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+}
+
+function getSectionSnippet(sec, q) {
+  if (!sec || !q) return '';
+  const fullText = sec.textContent.replace(/\s+/g, ' ').trim();
+  const lowerText = fullText.toLowerCase();
+  const idx = lowerText.indexOf(q);
+  if (idx === -1) return '';
+
+  const start = Math.max(0, idx - 25);
+  const end = Math.min(fullText.length, idx + q.length + 35);
+  let snippet = fullText.slice(start, end);
+  if (start > 0) snippet = '...' + snippet;
+  if (end < fullText.length) snippet = snippet + '...';
+  return snippet;
 }
 
 // --- GLOBAL PAGE SEARCH HANDLER ---
@@ -707,13 +896,7 @@ function handleGlobalSearch(query) {
 
   // 1. Metrics Catalog
   METRICS_DATA.forEach(m => {
-    if (
-      m.name.toLowerCase().includes(q) ||
-      m.acronym.toLowerCase().includes(q) ||
-      m.memoryTrick.toLowerCase().includes(q) ||
-      m.whatIsIt.toLowerCase().includes(q) ||
-      m.whyItMatters.toLowerCase().includes(q)
-    ) {
+    if (m._searchStr.includes(q)) {
       matches.push({
         type: '📚 Metrics Catalog',
         title: `${m.name} (${m.acronym})`,
@@ -725,11 +908,7 @@ function handleGlobalSearch(query) {
 
   // 2. Red Flags
   RED_FLAGS_CATALOG.forEach(rf => {
-    if (
-      rf.title.toLowerCase().includes(q) ||
-      rf.desc.toLowerCase().includes(q) ||
-      rf.action.toLowerCase().includes(q)
-    ) {
+    if (rf._searchStr.includes(q)) {
       matches.push({
         type: '🔴 Red Flags',
         title: rf.title,
@@ -741,12 +920,7 @@ function handleGlobalSearch(query) {
 
   // 3. Sector Exceptions
   SECTOR_EXCEPTIONS.forEach(sec => {
-    if (
-      sec.sector.toLowerCase().includes(q) ||
-      sec.why.toLowerCase().includes(q) ||
-      sec.ignore.some(i => i.toLowerCase().includes(q)) ||
-      sec.focus.some(f => f.toLowerCase().includes(q))
-    ) {
+    if (sec._searchStr.includes(q)) {
       matches.push({
         type: '🏢 Sector Guide',
         title: `🏢 ${sec.sector}`,
@@ -758,7 +932,7 @@ function handleGlobalSearch(query) {
 
   // 4. Checklist Items
   CHECKLIST_ITEMS.forEach(chk => {
-    if (chk.label.toLowerCase().includes(q)) {
+    if (chk._searchStr.includes(q)) {
       matches.push({
         type: '⚡ 60s Checklist',
         title: chk.label,
@@ -770,44 +944,90 @@ function handleGlobalSearch(query) {
 
   // 5. Quick Reference Tables
   QUICK_REFERENCE_TABLES.forEach(tbl => {
-    tbl.rows.forEach(r => {
-      if (
-        r.name.toLowerCase().includes(q) ||
-        r.exc.toLowerCase().includes(q) ||
-        r.good.toLowerCase().includes(q)
-      ) {
-        matches.push({
-          type: '📊 Ratios Matrix',
-          title: `${r.name} (${tbl.title})`,
-          snippet: `Excellent: ${r.exc} | Good: ${r.good}`,
-          targetId: 'quick-tables-section'
-        });
-      }
-    });
+    if (tbl._rowsSearch) {
+      tbl._rowsSearch.forEach(item => {
+        if (item.str.includes(q)) {
+          matches.push({
+            type: '📊 Ratios Matrix',
+            title: `${item.row.name} (${tbl.title})`,
+            snippet: `Excellent: ${item.row.exc} | Good: ${item.row.good}`,
+            targetId: 'quick-tables-section'
+          });
+        }
+      });
+    }
   });
 
-  if (matches.length === 0) {
+  // 6. Section Content Search ("You may want to check")
+  const sectionMatches = [];
+  if (q.length >= 2) {
+    const sections = document.querySelectorAll('main section[id]');
+    sections.forEach(sec => {
+      const text = sec.textContent.toLowerCase();
+      if (text.includes(q)) {
+        // Exclude section if direct match already targets this exact section ID
+        const alreadyDirectTarget = matches.some(m => m.targetId === sec.id);
+        if (!alreadyDirectTarget) {
+          const title = getSectionTitle(sec);
+          const snippet = getSectionSnippet(sec, q);
+          sectionMatches.push({
+            id: sec.id,
+            title: title,
+            snippet: snippet
+          });
+        }
+      }
+    });
+  }
+
+  if (matches.length === 0 && sectionMatches.length === 0) {
     container.innerHTML = `
       <div style="padding: 16px; text-align: center; color: var(--text-muted); font-size: 0.85rem;">
-        No results found for "${query}" across any section.
+        No results found for "${escapeHtml(query)}" across any section.
       </div>
     `;
     container.classList.add('active');
     return;
   }
 
-  const displayMatches = matches.slice(0, 10);
+  let html = '';
 
-  container.innerHTML = displayMatches.map(m => `
-    <div class="global-search-item" onclick="jumpToSearchResult('${m.targetId}')">
-      <div>
-        <div class="global-search-item-title">${m.title}</div>
-        <div class="global-search-item-snippet">${m.snippet}</div>
+  const displayMatches = matches.slice(0, 8);
+  if (displayMatches.length > 0) {
+    html += displayMatches.map(m => `
+      <div class="global-search-item" onclick="jumpToSearchResult('${m.targetId}')">
+        <div>
+          <div class="global-search-item-title">${escapeHtml(m.title)}</div>
+          <div class="global-search-item-snippet">${escapeHtml(m.snippet)}</div>
+        </div>
+        <span class="global-search-badge">${escapeHtml(m.type)}</span>
       </div>
-      <span class="global-search-badge">${m.type}</span>
-    </div>
-  `).join('');
+    `).join('');
+  }
 
+  if (sectionMatches.length > 0) {
+    html += `
+      <div class="global-search-group-title">
+        <svg style="width: 14px; height: 14px; stroke: currentColor; fill: none;" viewBox="0 0 24 24" stroke-width="2">
+          <circle cx="12" cy="12" r="10"></circle>
+          <path d="M12 8v4m0 4h.01"></path>
+        </svg>
+        You may want to check
+      </div>
+    `;
+
+    html += sectionMatches.map(sec => `
+      <div class="global-search-item" onclick="jumpToSearchResult('${sec.id}')">
+        <div>
+          <div class="global-search-item-title">${escapeHtml(sec.title)}</div>
+          <div class="global-search-item-snippet">${escapeHtml(sec.snippet)}</div>
+        </div>
+        <span class="global-search-badge section-badge">Section</span>
+      </div>
+    `).join('');
+  }
+
+  container.innerHTML = html;
   container.classList.add('active');
 }
 
@@ -825,10 +1045,21 @@ function jumpToSearchResult(targetId) {
 }
 
 // --- SECTION SCROLL OBSERVER FOR NAVBAR HIGHLIGHT ---
+let navMap = null;
+let currentActiveNavLink = null;
+
 function setupSectionObserver() {
   const sections = document.querySelectorAll('section[id]');
   const navLinks = document.querySelectorAll('.section-nav-link');
   if (!sections.length || !navLinks.length) return;
+
+  navMap = new Map();
+  navLinks.forEach(link => {
+    const href = link.getAttribute('href');
+    if (href && href.startsWith('#')) {
+      navMap.set(href.slice(1), link);
+    }
+  });
 
   const observerOptions = {
     root: null,
@@ -840,14 +1071,12 @@ function setupSectionObserver() {
     entries.forEach(entry => {
       if (entry.isIntersecting) {
         const id = entry.target.getAttribute('id');
-        navLinks.forEach(link => {
-          const href = link.getAttribute('href');
-          if (href === `#${id}`) {
-            link.classList.add('active');
-          } else {
-            link.classList.remove('active');
-          }
-        });
+        const activeLink = navMap.get(id);
+        if (activeLink && activeLink !== currentActiveNavLink) {
+          if (currentActiveNavLink) currentActiveNavLink.classList.remove('active');
+          activeLink.classList.add('active');
+          currentActiveNavLink = activeLink;
+        }
       }
     });
   }, observerOptions);
@@ -886,6 +1115,14 @@ function setCategory(catId) {
   renderMetrics();
 }
 
+function setCategoryAndScroll(catId) {
+  setCategory(catId);
+  const catalogSection = document.getElementById('metrics-section');
+  if (catalogSection) {
+    catalogSection.scrollIntoView({ behavior: 'smooth' });
+  }
+}
+
 // --- RENDER METRICS CARDS ---
 function renderMetrics() {
   const container = document.getElementById('metrics-container');
@@ -903,14 +1140,7 @@ function renderMetrics() {
 
     // Local catalog search query filter
     if (catalogSearchQuery) {
-      const q = catalogSearchQuery;
-      const matchName = metric.name.toLowerCase().includes(q);
-      const matchAcronym = metric.acronym.toLowerCase().includes(q);
-      const matchMemory = metric.memoryTrick.toLowerCase().includes(q);
-      const matchDesc = metric.whatIsIt.toLowerCase().includes(q);
-      const matchWhy = metric.whyItMatters.toLowerCase().includes(q);
-
-      return matchName || matchAcronym || matchMemory || matchDesc || matchWhy;
+      return metric._searchStr ? metric._searchStr.includes(catalogSearchQuery) : false;
     }
 
     return true;
@@ -1039,20 +1269,47 @@ function toggleBookmark(id) {
   } else {
     bookmarkedMetricIds.push(id);
   }
-  localStorage.setItem('briefstocks_bookmarks', JSON.stringify(bookmarkedMetricIds));
+  safeSetStorage('briefstocks_bookmarks', bookmarkedMetricIds);
   renderCategoryFilters();
-  renderMetrics();
+
+  if (currentCategory === 'saved') {
+    renderMetrics();
+  } else {
+    const isBookmarked = bookmarkedMetricIds.includes(id);
+    const card = document.getElementById(`metric-${id}`);
+    if (card) {
+      const svg = card.querySelector('.metric-card-header button svg');
+      if (svg) {
+        svg.style.stroke = isBookmarked ? 'var(--brand-cyan)' : 'var(--text-secondary)';
+        svg.style.fill = isBookmarked ? 'var(--brand-cyan)' : 'none';
+      }
+    }
+  }
 }
 
-function searchMetric(term) {
+function searchMetric(term, nodeEl = null) {
   const catalogSearchInput = document.getElementById('catalog-search-input');
   if (catalogSearchInput) catalogSearchInput.value = term;
   catalogSearchQuery = term.toLowerCase().trim();
   renderMetrics();
   
+  if (nodeEl) {
+    const nodes = document.querySelectorAll('.flow-node');
+    nodes.forEach(n => n.classList.remove('active'));
+    nodeEl.classList.add('active');
+  }
+
   const catalogSection = document.getElementById('metrics-section');
   if (catalogSection) {
     catalogSection.scrollIntoView({ behavior: 'smooth' });
+  }
+}
+
+function searchMetricById(metricId) {
+  const metric = METRICS_DATA.find(m => m.id === metricId);
+  if (metric) {
+    setCategory('all');
+    searchMetric(metric.name);
   }
 }
 
@@ -1064,11 +1321,16 @@ function renderChecklist() {
   grid.innerHTML = CHECKLIST_ITEMS.map(item => {
     const isChecked = !!checklistState[item.id];
     return `
-      <div class="check-item ${isChecked ? 'checked' : ''}" onclick="toggleChecklistItem('${item.id}')">
-        <div class="custom-checkbox">
-          <svg><use href="assets/icons.svg#icon-check"></use></svg>
+      <div class="check-item ${isChecked ? 'checked' : ''}" data-id="${item.id}">
+        <div class="check-item-left" onclick="toggleChecklistItem('${item.id}')">
+          <div class="custom-checkbox">
+            <svg><use href="assets/icons.svg#icon-check"></use></svg>
+          </div>
+          <div class="check-text">${item.label}</div>
         </div>
-        <div class="check-text">${item.label}</div>
+        <button class="check-inspect-btn" title="Inspect metric in catalog" onclick="searchMetricById('${item.metricId}')">
+          Metric ↗
+        </button>
       </div>
     `;
   }).join('');
@@ -1076,14 +1338,19 @@ function renderChecklist() {
 
 function toggleChecklistItem(id) {
   checklistState[id] = !checklistState[id];
-  localStorage.setItem('briefstocks_checklist', JSON.stringify(checklistState));
-  renderChecklist();
+  safeSetStorage('briefstocks_checklist', checklistState);
+
+  const isChecked = !!checklistState[id];
+  const checkItemEl = document.querySelector(`.check-item[data-id="${id}"]`);
+  if (checkItemEl) {
+    checkItemEl.classList.toggle('checked', isChecked);
+  }
   updateChecklistScore();
 }
 
 function resetChecklist() {
   checklistState = {};
-  localStorage.setItem('briefstocks_checklist', JSON.stringify(checklistState));
+  safeSetStorage('briefstocks_checklist', checklistState);
   renderChecklist();
   updateChecklistScore();
 }
@@ -1128,7 +1395,7 @@ function renderRedFlags() {
 
   container.innerHTML = RED_FLAGS_CATALOG.map(rf => `
     <div class="redflag-card">
-      <div class="redflag-title">${rf.title}</div>
+      <div class="redflag-title">🔴 ${rf.title}</div>
       <div class="redflag-desc">${rf.desc}</div>
       <div class="redflag-action">💡 ${rf.action}</div>
     </div>
@@ -1216,17 +1483,33 @@ function runLiveScreenerEvaluation() {
   else { findings.push("🔴 ROCE is Below Target (<15%)"); }
 
   // Debt/Equity check
-  if (deVal <= 0.3) { findings.push("🟢 Debt/Equity is Debt-Free / Excellent (<0.3)"); score += 2; }
-  else if (deVal <= 0.5) { findings.push("🟢 Debt/Equity is Manageable (0.3-0.5)"); score += 1; }
-  else { findings.push("🔴 High Financial Leverage (Debt/Equity > 0.5)"); }
+  if (deVal > 0 || document.getElementById('input-de')?.value !== '') {
+    if (deVal <= 0.3) { findings.push("🟢 Debt/Equity is Debt-Free / Excellent (<0.3)"); score += 2; }
+    else if (deVal <= 0.5) { findings.push("🟢 Debt/Equity is Manageable (0.3-0.5)"); score += 1; }
+    else { findings.push("🔴 High Financial Leverage (Debt/Equity > 0.5)"); }
+  }
+
+  // P/E check
+  if (peVal > 0) {
+    if (peVal <= 20) { findings.push("🟢 P/E Ratio is Attractive (<20x)"); score += 1.5; }
+    else if (peVal <= 35) { findings.push("🟡 P/E Ratio is Moderate / Fair (20-35x)"); score += 1; }
+    else { findings.push("🟡 P/E Ratio is High (>35x) — Check growth sustainability"); score += 0.5; }
+  }
 
   // PEG check
-  if (pegVal > 0 && pegVal <= 1.0) { findings.push("🟢 PEG Ratio shows Great Growth Value (<1.0)"); score += 2; }
-  else if (pegVal > 1.0) { findings.push("🟡 PEG Ratio is Fair/Expensive (>1.0)"); score += 0.5; }
+  if (pegVal > 0) {
+    if (pegVal <= 1.0) { findings.push("🟢 PEG Ratio shows Great Growth Value (<1.0)"); score += 2; }
+    else { findings.push("🟡 PEG Ratio is Fair/Expensive (>1.0)"); score += 0.5; }
+  }
 
   // Pledge check
-  if (pledgeVal === 0) { findings.push("🟢 Zero Promoter Pledge (Clean)"); score += 2; }
-  else if (pledgeVal > 15) { findings.push("🔴 MAJOR RED FLAG: High Promoter Pledge (>15%)"); score -= 3; }
+  if (pledgeVal === 0 && document.getElementById('input-pledge')?.value !== '') {
+    findings.push("🟢 Zero Promoter Pledge (Clean)"); score += 2;
+  } else if (pledgeVal > 15) {
+    findings.push("🔴 MAJOR RED FLAG: High Promoter Pledge (>15%)"); score -= 3;
+  } else if (pledgeVal > 0) {
+    findings.push("🟡 Promoter Pledge Present (>0%) — Monitor loan terms"); score += 0.5;
+  }
 
   let statusHtml = `
     <div style="font-weight: 800; font-size: 1.1rem; margin-bottom: 10px; color: ${score >= 7 ? 'var(--excellent-color)' : (score >= 4 ? 'var(--average-color)' : 'var(--redflag-color)')}">
@@ -1239,3 +1522,4 @@ function runLiveScreenerEvaluation() {
 
   outputBox.innerHTML = statusHtml;
 }
+
