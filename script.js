@@ -632,9 +632,20 @@ document.addEventListener('DOMContentLoaded', () => {
 // --- EVENT LISTENERS ---
 function setupEventListeners() {
   const searchInput = document.getElementById('search-input');
+  const catalogSearchInput = document.getElementById('catalog-search-input');
+
   if (searchInput) {
     searchInput.addEventListener('input', (e) => {
       currentSearchQuery = e.target.value.toLowerCase().trim();
+      if (catalogSearchInput) catalogSearchInput.value = e.target.value;
+      renderMetrics();
+    });
+  }
+
+  if (catalogSearchInput) {
+    catalogSearchInput.addEventListener('input', (e) => {
+      currentSearchQuery = e.target.value.toLowerCase().trim();
+      if (searchInput) searchInput.value = e.target.value;
       renderMetrics();
     });
   }
@@ -643,10 +654,12 @@ function setupEventListeners() {
   document.addEventListener('keydown', (e) => {
     if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
       e.preventDefault();
-      searchInput.focus();
-    } else if (e.key === '/' && document.activeElement !== searchInput) {
+      if (catalogSearchInput) catalogSearchInput.focus();
+      else if (searchInput) searchInput.focus();
+    } else if (e.key === '/' && document.activeElement !== searchInput && document.activeElement !== catalogSearchInput) {
       e.preventDefault();
-      searchInput.focus();
+      if (catalogSearchInput) catalogSearchInput.focus();
+      else if (searchInput) searchInput.focus();
     }
   });
 
@@ -694,6 +707,8 @@ function setCategory(catId) {
 // --- RENDER METRICS CARDS ---
 function renderMetrics() {
   const container = document.getElementById('metrics-container');
+  const countBadge = document.getElementById('catalog-count-badge');
+  const scrollContainer = document.getElementById('catalog-scroll-container');
   if (!container) return;
 
   let filtered = METRICS_DATA.filter(metric => {
@@ -719,6 +734,10 @@ function renderMetrics() {
     return true;
   });
 
+  if (countBadge) {
+    countBadge.innerText = `Showing ${filtered.length} of ${METRICS_DATA.length} Metrics`;
+  }
+
   if (filtered.length === 0) {
     container.innerHTML = `
       <div style="grid-column: 1 / -1; text-align: center; padding: 40px; color: var(--text-muted);">
@@ -730,6 +749,9 @@ function renderMetrics() {
   }
 
   container.innerHTML = filtered.map(metric => createMetricCardHtml(metric)).join('');
+  if (scrollContainer && currentSearchQuery) {
+    scrollContainer.scrollTop = 0;
+  }
 }
 
 function createMetricCardHtml(metric) {
@@ -842,11 +864,15 @@ function toggleBookmark(id) {
 
 function searchMetric(term) {
   const searchInput = document.getElementById('search-input');
-  if (searchInput) {
-    searchInput.value = term;
-    currentSearchQuery = term.toLowerCase();
-    renderMetrics();
-    window.scrollTo({ top: 400, behavior: 'smooth' });
+  const catalogSearchInput = document.getElementById('catalog-search-input');
+  if (searchInput) searchInput.value = term;
+  if (catalogSearchInput) catalogSearchInput.value = term;
+  currentSearchQuery = term.toLowerCase();
+  renderMetrics();
+  
+  const catalogSection = document.getElementById('metrics-section');
+  if (catalogSection) {
+    catalogSection.scrollIntoView({ behavior: 'smooth' });
   }
 }
 
