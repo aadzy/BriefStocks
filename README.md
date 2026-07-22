@@ -74,7 +74,7 @@ Covers 35+ fundamental metrics across 7 core categories:
 ### 4. 🛠 Quick Stock Analyzer (Screener Helper)
 Type numbers directly from Screener.in or ET Markets into the interactive widget to get an immediate automated fundamental verdict and breakdown.
 
-### 5. 🔀 Interactive Evaluation Flowchart
+### 5. 🔀 Company Evaluation Flowchart
 Visual step-by-step decision tree guiding your analysis from top-line revenue down to qualitative moat evaluation.
 
 ### 6. 🔴 Dedicated Biggest Red Flags Hub
