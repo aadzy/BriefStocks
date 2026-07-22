@@ -962,11 +962,13 @@ function renderSectorExceptions() {
 
   tbody.innerHTML = SECTOR_EXCEPTIONS.map(sec => `
     <tr>
-      <td class="sector-name-cell">🏢 ${sec.sector}</td>
+      <td class="sector-name-cell">
+        <span class="sector-title-wrapper">🏢 ${sec.sector}</span>
+      </td>
       <td>
         ${sec.ignore.map(ig => `<span class="ignore-pill">🚫 Ignore ${ig}</span>`).join('')}
       </td>
-      <td style="font-size: 0.85rem; color: var(--text-secondary);">${sec.why}</td>
+      <td style="font-size: 0.85rem; color: var(--text-secondary); line-height: 1.5;">${sec.why}</td>
       <td>
         ${sec.focus.map(f => `<span class="focus-pill">🎯 ${f}</span>`).join('')}
       </td>
