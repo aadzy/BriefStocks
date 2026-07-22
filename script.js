@@ -613,19 +613,20 @@ const QUICK_REFERENCE_TABLES = [
 
 // --- APPLICATION STATE ---
 let currentCategory = 'all';
-let currentSearchQuery = '';
+let catalogSearchQuery = '';
 let bookmarkedMetricIds = JSON.parse(localStorage.getItem('briefstocks_bookmarks') || '[]');
 let checklistState = JSON.parse(localStorage.getItem('briefstocks_checklist') || '{}');
 
 // --- INITIALIZATION ---
 document.addEventListener('DOMContentLoaded', () => {
   renderChecklist();
-  renderNavTabs();
+  renderCategoryFilters();
   renderMetrics();
   renderRedFlags();
   renderSectorExceptions();
   renderQuickReferenceTables();
   setupEventListeners();
+  setupSectionObserver();
   updateChecklistScore();
 });
 
@@ -633,33 +634,50 @@ document.addEventListener('DOMContentLoaded', () => {
 function setupEventListeners() {
   const searchInput = document.getElementById('search-input');
   const catalogSearchInput = document.getElementById('catalog-search-input');
+  const globalResults = document.getElementById('global-search-results');
 
-  if (searchInput) {
-    searchInput.addEventListener('input', (e) => {
-      currentSearchQuery = e.target.value.toLowerCase().trim();
-      if (catalogSearchInput) catalogSearchInput.value = e.target.value;
-      renderMetrics();
-    });
-  }
-
+  // Local Catalog Search Bar (Scope: Metrics Catalog only)
   if (catalogSearchInput) {
     catalogSearchInput.addEventListener('input', (e) => {
-      currentSearchQuery = e.target.value.toLowerCase().trim();
-      if (searchInput) searchInput.value = e.target.value;
+      catalogSearchQuery = e.target.value.toLowerCase().trim();
       renderMetrics();
     });
   }
 
-  // Keyboard shortcut Ctrl+K / '/' for search
+  // Top Navbar Search Bar (Scope: Global Search across all page sections)
+  if (searchInput) {
+    searchInput.addEventListener('input', (e) => {
+      handleGlobalSearch(e.target.value);
+    });
+
+    searchInput.addEventListener('focus', (e) => {
+      if (e.target.value.trim()) {
+        handleGlobalSearch(e.target.value);
+      }
+    });
+  }
+
+  // Keyboard shortcut Ctrl+K / '/' ALWAYS activates the Top Global Search Bar
   document.addEventListener('keydown', (e) => {
     if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
       e.preventDefault();
-      if (catalogSearchInput) catalogSearchInput.focus();
-      else if (searchInput) searchInput.focus();
+      if (searchInput) {
+        searchInput.focus();
+        searchInput.select();
+      }
     } else if (e.key === '/' && document.activeElement !== searchInput && document.activeElement !== catalogSearchInput) {
       e.preventDefault();
-      if (catalogSearchInput) catalogSearchInput.focus();
-      else if (searchInput) searchInput.focus();
+      if (searchInput) searchInput.focus();
+    } else if (e.key === 'Escape') {
+      if (globalResults) globalResults.classList.remove('active');
+    }
+  });
+
+  // Close global search dropdown when clicking outside
+  document.addEventListener('click', (e) => {
+    const searchWrapper = document.querySelector('.search-wrapper');
+    if (searchWrapper && !searchWrapper.contains(e.target)) {
+      if (globalResults) globalResults.classList.remove('active');
     }
   });
 
@@ -673,25 +691,189 @@ function setupEventListeners() {
   }
 }
 
-// --- RENDER NAV TABS ---
-function renderNavTabs() {
-  const navContainer = document.getElementById('category-nav-inner');
-  if (!navContainer) return;
+// --- GLOBAL PAGE SEARCH HANDLER ---
+function handleGlobalSearch(query) {
+  const container = document.getElementById('global-search-results');
+  if (!container) return;
+
+  const q = query.toLowerCase().trim();
+  if (!q) {
+    container.classList.remove('active');
+    container.innerHTML = '';
+    return;
+  }
+
+  let matches = [];
+
+  // 1. Metrics Catalog
+  METRICS_DATA.forEach(m => {
+    if (
+      m.name.toLowerCase().includes(q) ||
+      m.acronym.toLowerCase().includes(q) ||
+      m.memoryTrick.toLowerCase().includes(q) ||
+      m.whatIsIt.toLowerCase().includes(q) ||
+      m.whyItMatters.toLowerCase().includes(q)
+    ) {
+      matches.push({
+        type: '📚 Metrics Catalog',
+        title: `${m.name} (${m.acronym})`,
+        snippet: m.whatIsIt,
+        targetId: `metric-${m.id}`
+      });
+    }
+  });
+
+  // 2. Red Flags
+  RED_FLAGS_CATALOG.forEach(rf => {
+    if (
+      rf.title.toLowerCase().includes(q) ||
+      rf.desc.toLowerCase().includes(q) ||
+      rf.action.toLowerCase().includes(q)
+    ) {
+      matches.push({
+        type: '🔴 Red Flags',
+        title: rf.title,
+        snippet: rf.desc,
+        targetId: 'redflags-section'
+      });
+    }
+  });
+
+  // 3. Sector Exceptions
+  SECTOR_EXCEPTIONS.forEach(sec => {
+    if (
+      sec.sector.toLowerCase().includes(q) ||
+      sec.why.toLowerCase().includes(q) ||
+      sec.ignore.some(i => i.toLowerCase().includes(q)) ||
+      sec.focus.some(f => f.toLowerCase().includes(q))
+    ) {
+      matches.push({
+        type: '🏢 Sector Guide',
+        title: `🏢 ${sec.sector}`,
+        snippet: sec.why,
+        targetId: 'sector-guide-section'
+      });
+    }
+  });
+
+  // 4. Checklist Items
+  CHECKLIST_ITEMS.forEach(chk => {
+    if (chk.label.toLowerCase().includes(q)) {
+      matches.push({
+        type: '⚡ 60s Checklist',
+        title: chk.label,
+        snippet: '8-point fundamental screening check',
+        targetId: 'checklist-section'
+      });
+    }
+  });
+
+  // 5. Quick Reference Tables
+  QUICK_REFERENCE_TABLES.forEach(tbl => {
+    tbl.rows.forEach(r => {
+      if (
+        r.name.toLowerCase().includes(q) ||
+        r.exc.toLowerCase().includes(q) ||
+        r.good.toLowerCase().includes(q)
+      ) {
+        matches.push({
+          type: '📊 Ratios Matrix',
+          title: `${r.name} (${tbl.title})`,
+          snippet: `Excellent: ${r.exc} | Good: ${r.good}`,
+          targetId: 'quick-tables-section'
+        });
+      }
+    });
+  });
+
+  if (matches.length === 0) {
+    container.innerHTML = `
+      <div style="padding: 16px; text-align: center; color: var(--text-muted); font-size: 0.85rem;">
+        No results found for "${query}" across any section.
+      </div>
+    `;
+    container.classList.add('active');
+    return;
+  }
+
+  const displayMatches = matches.slice(0, 10);
+
+  container.innerHTML = displayMatches.map(m => `
+    <div class="global-search-item" onclick="jumpToSearchResult('${m.targetId}')">
+      <div>
+        <div class="global-search-item-title">${m.title}</div>
+        <div class="global-search-item-snippet">${m.snippet}</div>
+      </div>
+      <span class="global-search-badge">${m.type}</span>
+    </div>
+  `).join('');
+
+  container.classList.add('active');
+}
+
+function jumpToSearchResult(targetId) {
+  const container = document.getElementById('global-search-results');
+  if (container) container.classList.remove('active');
+
+  const el = document.getElementById(targetId);
+  if (el) {
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    el.classList.remove('highlight-pulse');
+    void el.offsetWidth; // trigger reflow for animation
+    el.classList.add('highlight-pulse');
+  }
+}
+
+// --- SECTION SCROLL OBSERVER FOR NAVBAR HIGHLIGHT ---
+function setupSectionObserver() {
+  const sections = document.querySelectorAll('section[id]');
+  const navLinks = document.querySelectorAll('.section-nav-link');
+  if (!sections.length || !navLinks.length) return;
+
+  const observerOptions = {
+    root: null,
+    rootMargin: '-20% 0px -55% 0px',
+    threshold: 0
+  };
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const id = entry.target.getAttribute('id');
+        navLinks.forEach(link => {
+          const href = link.getAttribute('href');
+          if (href === `#${id}`) {
+            link.classList.add('active');
+          } else {
+            link.classList.remove('active');
+          }
+        });
+      }
+    });
+  }, observerOptions);
+
+  sections.forEach(sec => observer.observe(sec));
+}
+
+// --- RENDER CATEGORY FILTERS IN METRICS SECTION ---
+function renderCategoryFilters() {
+  const container = document.getElementById('metrics-category-bar');
+  if (!container) return;
 
   const categories = [
-    { id: 'all', label: 'All Metrics', icon: 'icon-quality', count: METRICS_DATA.length },
-    { id: 'growth', label: '1️⃣ Growth', icon: 'icon-growth', count: METRICS_DATA.filter(m => m.category==='growth').length },
-    { id: 'profitability', label: '2️⃣ Profitability', icon: 'icon-profit', count: METRICS_DATA.filter(m => m.category==='profitability').length },
-    { id: 'health', label: '3️⃣ Financial Health', icon: 'icon-health', count: METRICS_DATA.filter(m => m.category==='health').length },
-    { id: 'valuation', label: '4️⃣ Valuation', icon: 'icon-valuation', count: METRICS_DATA.filter(m => m.category==='valuation').length },
-    { id: 'ownership', label: '5️⃣ Ownership', icon: 'icon-ownership', count: METRICS_DATA.filter(m => m.category==='ownership').length },
-    { id: 'cashflow', label: '6️⃣ Cash Flow', icon: 'icon-cashflow', count: METRICS_DATA.filter(m => m.category==='cashflow').length },
-    { id: 'quality', label: '7️⃣ Quality & Moat', icon: 'icon-quality', count: METRICS_DATA.filter(m => m.category==='quality').length },
-    { id: 'saved', label: '⭐ Bookmarks', icon: 'icon-bookmark', count: bookmarkedMetricIds.length }
+    { id: 'all', label: 'All Metrics', count: METRICS_DATA.length },
+    { id: 'growth', label: '1️⃣ Growth', count: METRICS_DATA.filter(m => m.category==='growth').length },
+    { id: 'profitability', label: '2️⃣ Profitability', count: METRICS_DATA.filter(m => m.category==='profitability').length },
+    { id: 'health', label: '3️⃣ Financial Health', count: METRICS_DATA.filter(m => m.category==='health').length },
+    { id: 'valuation', label: '4️⃣ Valuation', count: METRICS_DATA.filter(m => m.category==='valuation').length },
+    { id: 'ownership', label: '5️⃣ Ownership', count: METRICS_DATA.filter(m => m.category==='ownership').length },
+    { id: 'cashflow', label: '6️⃣ Cash Flow', count: METRICS_DATA.filter(m => m.category==='cashflow').length },
+    { id: 'quality', label: '7️⃣ Quality & Moat', count: METRICS_DATA.filter(m => m.category==='quality').length },
+    { id: 'saved', label: '⭐ Bookmarks', count: bookmarkedMetricIds.length }
   ];
 
-  navContainer.innerHTML = categories.map(cat => `
-    <button class="nav-tab ${cat.id === currentCategory ? 'active' : ''}" onclick="setCategory('${cat.id}')">
+  container.innerHTML = categories.map(cat => `
+    <button class="category-pill ${cat.id === currentCategory ? 'active' : ''}" onclick="setCategory('${cat.id}')">
       <span>${cat.label}</span>
       <span class="badge-count">${cat.count}</span>
     </button>
@@ -700,7 +882,7 @@ function renderNavTabs() {
 
 function setCategory(catId) {
   currentCategory = catId;
-  renderNavTabs();
+  renderCategoryFilters();
   renderMetrics();
 }
 
@@ -719,9 +901,9 @@ function renderMetrics() {
       return false;
     }
 
-    // Search query filter
-    if (currentSearchQuery) {
-      const q = currentSearchQuery;
+    // Local catalog search query filter
+    if (catalogSearchQuery) {
+      const q = catalogSearchQuery;
       const matchName = metric.name.toLowerCase().includes(q);
       const matchAcronym = metric.acronym.toLowerCase().includes(q);
       const matchMemory = metric.memoryTrick.toLowerCase().includes(q);
@@ -741,7 +923,7 @@ function renderMetrics() {
   if (filtered.length === 0) {
     container.innerHTML = `
       <div style="grid-column: 1 / -1; text-align: center; padding: 40px; color: var(--text-muted);">
-        <p style="font-size: 1.1rem; font-weight: 700; margin-bottom: 8px;">No metrics found matching "${currentSearchQuery}"</p>
+        <p style="font-size: 1.1rem; font-weight: 700; margin-bottom: 8px;">No metrics found matching "${catalogSearchQuery}"</p>
         <p style="font-size: 0.88rem;">Try searching for keywords like "ROE", "P/E", "Debt", "Margin", "Cash Flow", or reset filters.</p>
       </div>
     `;
@@ -749,7 +931,7 @@ function renderMetrics() {
   }
 
   container.innerHTML = filtered.map(metric => createMetricCardHtml(metric)).join('');
-  if (scrollContainer && currentSearchQuery) {
+  if (scrollContainer && catalogSearchQuery) {
     scrollContainer.scrollTop = 0;
   }
 }
@@ -858,16 +1040,14 @@ function toggleBookmark(id) {
     bookmarkedMetricIds.push(id);
   }
   localStorage.setItem('briefstocks_bookmarks', JSON.stringify(bookmarkedMetricIds));
-  renderNavTabs();
+  renderCategoryFilters();
   renderMetrics();
 }
 
 function searchMetric(term) {
-  const searchInput = document.getElementById('search-input');
   const catalogSearchInput = document.getElementById('catalog-search-input');
-  if (searchInput) searchInput.value = term;
   if (catalogSearchInput) catalogSearchInput.value = term;
-  currentSearchQuery = term.toLowerCase();
+  catalogSearchQuery = term.toLowerCase().trim();
   renderMetrics();
   
   const catalogSection = document.getElementById('metrics-section');

@@ -1,103 +1,113 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Stock Fundamentals Cheat Sheet | Screener & Investing Guide</title>
-  <meta name="description" content="A clean, interactive Stock Fundamentals Cheat Sheet for investors. Instant reference for ROE, ROCE, P/E, Debt/Equity, Cash Flow, Red Flags, and Sector Exceptions.">
+  <meta name="description"
+    content="A clean, interactive Stock Fundamentals Cheat Sheet for investors. Instant reference for ROE, ROCE, P/E, Debt/Equity, Cash Flow, Red Flags, and Sector Exceptions.">
   <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
 
-  <!-- Sticky Main Header -->
-  <header class="site-header">
-    <div class="header-container">
-      <a href="#" class="logo-area">
-        <div class="logo-icon">
-          <svg><use href="assets/icons.svg#icon-growth"></use></svg>
-        </div>
-        <div>
-          <div class="logo-title">BRIEF STOCKS</div>
-          <div class="logo-subtitle">Fundamentals Cheat Sheet</div>
-        </div>
-      </a>
-
-      <!-- Search Bar -->
-      <div class="search-wrapper">
-        <svg class="search-icon-left"><use href="assets/icons.svg#icon-search"></use></svg>
-        <input 
-          type="text" 
-          id="search-input" 
-          class="search-input" 
-          placeholder="Search metrics, ratios, red flags, or sectors... (e.g. roe, cash flow, debt, peg)"
-          aria-label="Search fundamental metrics"
-        >
-        <span class="keyboard-shortcut">Ctrl + K</span>
-      </div>
-
-      <!-- Quick Actions -->
-      <div class="quick-actions">
-        <a href="#checklist-section" class="btn btn-ghost">
-          <svg><use href="assets/icons.svg#icon-check"></use></svg>
-          60s Checklist
+  <!-- Sticky Header Wrapper -->
+  <header class="sticky-header-wrapper">
+    <div class="site-header">
+      <div class="header-container">
+        <a href="#" class="logo-area">
+          <div class="logo-icon">
+            <svg>
+              <use href="assets/icons.svg#icon-growth"></use>
+            </svg>
+          </div>
+          <div>
+            <div class="logo-title">BRIEF STOCKS</div>
+            <div class="logo-subtitle">Fundamentals Cheat Sheet</div>
+          </div>
         </a>
-        <a href="#flowchart-section" class="btn btn-primary">
-          <svg><use href="assets/icons.svg#icon-flowchart"></use></svg>
-          Evaluation Flow
-        </a>
+
+        <!-- Search Bar -->
+        <div class="search-wrapper">
+          <svg class="search-icon-left">
+            <use href="assets/icons.svg#icon-search"></use>
+          </svg>
+          <input type="text" id="search-input" class="search-input"
+            placeholder="Search anything on page (e.g. roe, banks, etc.)" aria-label="Search all sections"
+            autocomplete="off">
+          <span class="keyboard-shortcut">Ctrl + K</span>
+
+          <!-- Global Search Results Dropdown -->
+          <div class="global-search-results" id="global-search-results"></div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="quick-actions">
+          <a href="#checklist-section" class="btn btn-ghost">
+            <svg>
+              <use href="assets/icons.svg#icon-check"></use>
+            </svg>
+            60s Checklist
+          </a>
+          <a href="#flowchart-section" class="btn btn-primary">
+            <svg>
+              <use href="assets/icons.svg#icon-flowchart"></use>
+            </svg>
+            Evaluation Flow
+          </a>
+        </div>
       </div>
     </div>
+
+    <!-- Section Navigation Bar -->
+    <nav class="site-nav">
+      <div class="site-nav-inner" id="site-nav-inner">
+        <a href="#checklist-section" class="section-nav-link active">⚡ 60s Checklist</a>
+        <a href="#metrics-section" class="section-nav-link">📚 Metrics Catalog</a>
+        <a href="#quick-tables-section" class="section-nav-link">📊 Ratios Matrix</a>
+        <a href="#screener-helper-section" class="section-nav-link">🛠 Stock Analyzer</a>
+        <a href="#flowchart-section" class="section-nav-link">🔀 Evaluation Flow</a>
+        <a href="#redflags-section" class="section-nav-link">🔴 Red Flags</a>
+        <a href="#sector-guide-section" class="section-nav-link">🏢 Sector Guide</a>
+      </div>
+    </nav>
   </header>
-
-  <!-- Sticky Category Sub-Nav -->
-  <nav class="category-nav">
-    <div class="category-nav-inner" id="category-nav-inner">
-      <!-- Generated via JS -->
-    </div>
-  </nav>
 
   <!-- Main Content Wrapper -->
   <main class="main-wrapper">
 
     <!-- Hero Banner & Read Sequence -->
     <section class="hero-banner animate-fade">
-      <div class="hero-grid">
-        <div>
-          <h1 class="hero-title">📈 Stock Fundamentals Cheat Sheet</h1>
-          <p class="hero-desc">
-            Use this cheat sheet alongside <strong>Screener.in</strong>, <strong>ET Markets</strong>, or <strong>Moneycontrol</strong> to evaluate company health in under 60 seconds without memorizing ratios.
-          </p>
+      <div class="hero-content">
+        <h1 class="hero-title">📈 Stock Fundamentals Cheat Sheet</h1>
+        <p class="hero-desc">
+          Use this cheat sheet alongside <strong>Screener.in</strong>, <strong>ET Markets</strong>, or
+          <strong>Moneycontrol</strong> to evaluate company health in under 60 seconds without memorizing ratios.
+        </p>
 
-          <!-- Read Top -> Bottom sequence -->
-          <div style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); font-weight: 700; margin-bottom: 8px;">
-            Standard Investor Evaluation Flow (Read Top → Bottom):
+        <!-- Read Top -> Bottom sequence -->
+        <div class="flow-card-wrapper">
+          <div class="flow-card-header">
+            <span class="flow-card-badge">⚡ Standard Evaluation Flow</span>
+            <span style="font-size: 0.8rem; color: var(--text-secondary);">Evaluate company metrics step-by-step (Read
+              Top → Bottom):</span>
           </div>
+
           <div class="sequence-flow">
-            <span class="seq-item" style="background: rgba(56, 189, 248, 0.12); color: var(--brand-cyan);">1️⃣ Growth</span>
+            <span class="seq-item seq-growth">1️⃣ Growth</span>
             <span class="seq-arrow">→</span>
-            <span class="seq-item" style="background: rgba(16, 185, 129, 0.12); color: var(--excellent-color);">2️⃣ Profitability</span>
+            <span class="seq-item seq-profit">2️⃣ Profitability</span>
             <span class="seq-arrow">→</span>
-            <span class="seq-item" style="background: rgba(251, 191, 36, 0.12); color: var(--average-color);">3️⃣ Health</span>
+            <span class="seq-item seq-health">3️⃣ Financial Health</span>
             <span class="seq-arrow">→</span>
-            <span class="seq-item" style="background: rgba(139, 92, 246, 0.12); color: var(--brand-purple);">4️⃣ Cash Flow</span>
+            <span class="seq-item seq-cash">4️⃣ Cash Flow</span>
             <span class="seq-arrow">→</span>
-            <span class="seq-item" style="background: rgba(56, 189, 248, 0.12); color: var(--brand-cyan);">5️⃣ Valuation</span>
+            <span class="seq-item seq-val">5️⃣ Valuation</span>
             <span class="seq-arrow">→</span>
-            <span class="seq-item" style="background: rgba(249, 115, 22, 0.12); color: var(--caution-color);">6️⃣ Ownership</span>
+            <span class="seq-item seq-own">6️⃣ Ownership</span>
             <span class="seq-arrow">→</span>
-            <span class="seq-item" style="background: rgba(239, 68, 68, 0.12); color: var(--redflag-color);">7️⃣ Quality</span>
-          </div>
-        </div>
-
-        <!-- Legend Box -->
-        <div class="legend-box">
-          <div class="legend-title">Color Code Meaning</div>
-          <div class="legend-grid">
-            <div class="legend-item"><span class="status-dot dot-excellent"></span>🟢 Excellent</div>
-            <div class="legend-item"><span class="status-dot dot-good"></span>🟢 Good</div>
-            <div class="legend-item"><span class="status-dot dot-average"></span>🟡 Acceptable</div>
-            <div class="legend-item"><span class="status-dot dot-caution"></span>🟠 Investigate</div>
-            <div class="legend-item" style="grid-column: 1 / -1;"><span class="status-dot dot-redflag"></span>🔴 Red Flag / Dealbreaker</div>
+            <span class="seq-item seq-red">7️⃣ Quality & Moat</span>
           </div>
         </div>
       </div>
@@ -108,7 +118,9 @@
       <div class="checklist-header">
         <div class="checklist-title-group">
           <div class="checklist-title">
-            <svg style="width: 24px; height: 24px; color: var(--excellent-color);"><use href="assets/icons.svg#icon-check"></use></svg>
+            <svg style="width: 24px; height: 24px; color: var(--excellent-color);">
+              <use href="assets/icons.svg#icon-check"></use>
+            </svg>
             60-SECOND STOCK CHECKLIST
           </div>
           <span class="checklist-badge">Live Interactive</span>
@@ -139,7 +151,9 @@
     <section id="metrics-section">
       <div class="section-title-group">
         <h2 class="section-heading">
-          <span class="section-icon"><svg><use href="assets/icons.svg#icon-quality"></use></svg></span>
+          <span class="section-icon"><svg>
+              <use href="assets/icons.svg#icon-quality"></use>
+            </svg></span>
           Fundamental Metrics Catalog
         </h2>
         <span style="font-size: 0.85rem; color: var(--text-secondary);">Interactive Cards & Reference Guide</span>
@@ -148,19 +162,21 @@
       <!-- Catalog Control Header Bar -->
       <div class="catalog-control-bar">
         <div class="catalog-search-box">
-          <svg class="search-icon-left" style="top: 50%; transform: translateY(-50%);"><use href="assets/icons.svg#icon-search"></use></svg>
-          <input 
-            type="text" 
-            id="catalog-search-input" 
-            class="catalog-search-input" 
-            placeholder="Search inside catalog (e.g. roe, debt, margin, pe...)"
-            aria-label="Filter catalog metrics"
-          >
+          <svg class="search-icon-left" style="top: 50%; transform: translateY(-50%);">
+            <use href="assets/icons.svg#icon-search"></use>
+          </svg>
+          <input type="text" id="catalog-search-input" class="catalog-search-input"
+            placeholder="Search inside catalog (e.g. roe, debt, margin, etc.)" aria-label="Filter catalog metrics">
         </div>
 
         <div style="display: flex; align-items: center; gap: 10px;">
           <span class="catalog-count-badge" id="catalog-count-badge">Showing 35 of 35 Metrics</span>
         </div>
+      </div>
+
+      <!-- Category Filter Pills Bar -->
+      <div class="metrics-category-bar" id="metrics-category-bar">
+        <!-- Rendered via JS -->
       </div>
 
       <!-- Scrollable Parent Container -->
@@ -175,8 +191,11 @@
     <section id="quick-tables-section" style="margin-top: 16px;">
       <div class="section-title-group">
         <h2 class="section-heading">
-          <span class="section-icon" style="color: var(--average-color); border-color: var(--average-border); background: var(--average-bg);">
-            <svg><use href="assets/icons.svg#icon-valuation"></use></svg>
+          <span class="section-icon"
+            style="color: var(--average-color); border-color: var(--average-border); background: var(--average-bg);">
+            <svg>
+              <use href="assets/icons.svg#icon-valuation"></use>
+            </svg>
           </span>
           Quick-Reference Ratios Matrix
         </h2>
@@ -190,12 +209,16 @@
     <section id="screener-helper-section">
       <div class="screener-helper-card">
         <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
-          <div class="section-icon" style="color: var(--brand-purple); border-color: rgba(139, 92, 246, 0.3); background: rgba(139, 92, 246, 0.12);">
-            <svg><use href="assets/icons.svg#icon-calculator"></use></svg>
+          <div class="section-icon"
+            style="color: var(--brand-purple); border-color: rgba(139, 92, 246, 0.3); background: rgba(139, 92, 246, 0.12);">
+            <svg>
+              <use href="assets/icons.svg#icon-calculator"></use>
+            </svg>
           </div>
           <div>
             <h3 style="font-size: 1.15rem; font-weight: 800;">Quick Stock Analyzer (Screener Helper)</h3>
-            <p style="font-size: 0.85rem; color: var(--text-secondary);">Type numbers directly from Screener.in or ET Markets to evaluate the stock instantly.</p>
+            <p style="font-size: 0.85rem; color: var(--text-secondary);">Type numbers directly from Screener.in or ET
+              Markets to evaluate the stock instantly.</p>
           </div>
         </div>
 
@@ -241,8 +264,11 @@
     <section id="flowchart-section" class="flowchart-card">
       <div class="section-title-group" style="margin-top: 0;">
         <h2 class="section-heading">
-          <span class="section-icon" style="color: var(--excellent-color); border-color: var(--excellent-border); background: var(--excellent-bg);">
-            <svg><use href="assets/icons.svg#icon-flowchart"></use></svg>
+          <span class="section-icon"
+            style="color: var(--excellent-color); border-color: var(--excellent-border); background: var(--excellent-bg);">
+            <svg>
+              <use href="assets/icons.svg#icon-flowchart"></use>
+            </svg>
           </span>
           Company Evaluation Flowchart
         </h2>
@@ -251,53 +277,71 @@
 
       <div class="flowchart-tree">
         <div class="flow-node start">START STOCK ANALYSIS</div>
-        <div class="flow-arrow"><div class="flow-arrow-line"></div></div>
+        <div class="flow-arrow">
+          <div class="flow-arrow-line"></div>
+        </div>
 
         <div class="flow-node" onclick="searchMetric('Revenue Growth')">
           Growing Revenue? (Sales CAGR > 10%)
         </div>
-        <div class="flow-arrow"><span class="flow-arrow-yes">YES</span><div class="flow-arrow-line"></div></div>
+        <div class="flow-arrow"><span class="flow-arrow-yes">YES</span>
+          <div class="flow-arrow-line"></div>
+        </div>
 
         <div class="flow-node" onclick="searchMetric('Profit Growth')">
           Growing Profit? (Net Profit growing faster than sales)
         </div>
-        <div class="flow-arrow"><span class="flow-arrow-yes">YES</span><div class="flow-arrow-line"></div></div>
+        <div class="flow-arrow"><span class="flow-arrow-yes">YES</span>
+          <div class="flow-arrow-line"></div>
+        </div>
 
         <div class="flow-node" onclick="searchMetric('ROE')">
           Healthy ROE & ROCE? (> 15–20%)
         </div>
-        <div class="flow-arrow"><span class="flow-arrow-yes">YES</span><div class="flow-arrow-line"></div></div>
+        <div class="flow-arrow"><span class="flow-arrow-yes">YES</span>
+          <div class="flow-arrow-line"></div>
+        </div>
 
         <div class="flow-node" onclick="searchMetric('Debt to Equity')">
-          Low Debt? (Debt/Equity < 0.5 & ICR > 5x)
+          Low Debt? (Debt/Equity < 0.5 & ICR> 5x)
         </div>
-        <div class="flow-arrow"><span class="flow-arrow-yes">YES</span><div class="flow-arrow-line"></div></div>
+        <div class="flow-arrow"><span class="flow-arrow-yes">YES</span>
+          <div class="flow-arrow-line"></div>
+        </div>
 
         <div class="flow-node" onclick="searchMetric('Operating Cash Flow')">
           Positive Cash Flow? (OCF > Net Profit)
         </div>
-        <div class="flow-arrow"><span class="flow-arrow-yes">YES</span><div class="flow-arrow-line"></div></div>
+        <div class="flow-arrow"><span class="flow-arrow-yes">YES</span>
+          <div class="flow-arrow-line"></div>
+        </div>
 
         <div class="flow-node" onclick="searchMetric('PEG Ratio')">
-          Reasonable Valuation? (PEG < 1.0 or P/E near historic average)
-        </div>
-        <div class="flow-arrow"><span class="flow-arrow-yes">YES</span><div class="flow-arrow-line"></div></div>
+          Reasonable Valuation? (PEG < 1.0 or P/E near historic average) </div>
+            <div class="flow-arrow"><span class="flow-arrow-yes">YES</span>
+              <div class="flow-arrow-line"></div>
+            </div>
 
-        <div class="flow-node" onclick="searchMetric('Economic Moat')">
-          Investigate Qualitative Factors (Moat, Brand, Clean Governance)
-        </div>
-        <div class="flow-arrow"><span class="flow-arrow-yes">YES</span><div class="flow-arrow-line"></div></div>
+            <div class="flow-node" onclick="searchMetric('Economic Moat')">
+              Investigate Qualitative Factors (Moat, Brand, Clean Governance)
+            </div>
+            <div class="flow-arrow"><span class="flow-arrow-yes">YES</span>
+              <div class="flow-arrow-line"></div>
+            </div>
 
-        <div class="flow-node end">🎯 POSSIBLE INVESTMENT CANDIDATE</div>
-      </div>
+            <div class="flow-node end">🎯 POSSIBLE INVESTMENT CANDIDATE</div>
+        </div>
     </section>
 
     <!-- DEDICATED BIGGEST RED FLAGS SECTION -->
     <section id="redflags-section">
       <div class="section-title-group">
         <h2 class="section-heading" style="color: #f87171;">
-          <span class="section-icon" style="color: var(--redflag-color); border-color: var(--redflag-border); background: var(--redflag-bg);">
-            <svg><use href="assets/icons.svg#icon-redflag"></use></svg>
+          <span class="section-icon"
+            style="color: var(--redflag-color); border-color: var(--redflag-border); background: var(--redflag-bg);">
+            <svg>
+              <use href="assets/icons.svg#icon-redflag"></use>
+            </svg>
           </span>
           Biggest Red Flags (Immediate Dealbreakers)
         </h2>
@@ -312,12 +356,16 @@
     <section id="sector-guide-section">
       <div class="section-title-group">
         <h2 class="section-heading">
-          <span class="section-icon" style="color: var(--brand-cyan); border-color: rgba(56, 189, 248, 0.3); background: rgba(56, 189, 248, 0.12);">
-            <svg><use href="assets/icons.svg#icon-sector"></use></svg>
+          <span class="section-icon"
+            style="color: var(--brand-cyan); border-color: rgba(56, 189, 248, 0.3); background: rgba(56, 189, 248, 0.12);">
+            <svg>
+              <use href="assets/icons.svg#icon-sector"></use>
+            </svg>
           </span>
           Bonus: Sector Exceptions Guide
         </h2>
-        <span style="font-size: 0.85rem; color: var(--text-secondary);">Never compare metrics across different industries without adjustments</span>
+        <span style="font-size: 0.85rem; color: var(--text-secondary);">Never compare metrics across different
+          industries without adjustments</span>
       </div>
 
       <div class="sector-table-container">
@@ -342,13 +390,17 @@
   <!-- Footer -->
   <footer class="site-footer">
     <div>
-      <strong>Stock Fundamentals Cheat Sheet</strong> — Built for smart stock analysis on Screener.in, ET Markets, & Moneycontrol.
+      <strong>Stock Fundamentals Cheat Sheet</strong> — Built for smart stock analysis on Screener.in, ET Markets, &
+      Moneycontrol.
     </div>
     <div>
-      Press <kbd style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px; font-family: var(--font-mono);">Ctrl + K</kbd> to search anytime.
+      Press <kbd
+        style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px; font-family: var(--font-mono);">Ctrl
+        + K</kbd> to search anytime.
     </div>
   </footer>
 
   <script src="script.js"></script>
 </body>
+
 </html>
